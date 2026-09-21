@@ -31,7 +31,7 @@ export function assertLavalinkNodeAvailable(client) {
         throw new TitanBotError(
             'Lavalink unavailable',
             ErrorTypes.CONFIGURATION,
-            'Music is temporarily unavailable — no Lavalink nodes are connected. Try again shortly or configure your own Lavalink server.',
+            'Музыка временно недоступна — ни один из узлов Lavalink не подключен. Повторите попытку в ближайшее время или настройте свой собственный сервер Lavalink.',
         );
     }
 }
@@ -41,7 +41,7 @@ function assertBotVoicePermissions(channel) {
         throw new TitanBotError(
             'Voice channel unavailable',
             ErrorTypes.CONFIGURATION,
-            'Could not access that voice channel.',
+            'Бляяяя. У меня не удалось получить доступ к этому голосовому каналу.',
         );
     }
 
@@ -49,7 +49,7 @@ function assertBotVoicePermissions(channel) {
         throw new TitanBotError(
             'Missing voice permissions',
             ErrorTypes.PERMISSION,
-            'I need **Connect** and **Speak** permissions in your voice channel.',
+            'Ты сука дебил ебаный. Мне нужны разрешения **Подключаться** и **Говорить** в этом голосовом канале.',
         );
     }
 }
@@ -81,7 +81,7 @@ async function waitForPlayerConnection(player) {
         throw new TitanBotError(
             'Voice connection failed',
             ErrorTypes.CONFIGURATION,
-            'Could not connect to the voice channel. Ensure Lavalink is online, the bot has Connect and Speak permissions, then try again.',
+            'Не удалось подключиться к голосовому каналу. Убедитесь, что Lavalink подключен к сети, у бота есть разрешения подключаться и говорить, затем повторите попытку.',
         );
     }
 }
@@ -100,7 +100,7 @@ export function assertRiffyAvailable(client) {
         throw new TitanBotError(
             'Lavalink not configured',
             ErrorTypes.CONFIGURATION,
-            'Music is unavailable — Lavalink is not configured.',
+            'Ну ты чучундра, реально. Музыка недоступна — Lavalink не настроен.',
         );
     }
 }
@@ -110,7 +110,7 @@ export function assertInVoice(member) {
         throw new TitanBotError(
             'Not in voice channel',
             ErrorTypes.USER_INPUT,
-            'You need to be in a voice channel.',
+            'Але нахуй! Ты должен быть подключены к голосовому каналу.',
         );
     }
 }
@@ -231,7 +231,7 @@ export async function playQuery(client, interaction, query) {
         throw new TitanBotError(
             'Lavalink load failed',
             ErrorTypes.USER_INPUT,
-            `Failed to load track: ${reason}`,
+            `Пиздец, не удалось загрузить трек: ${reason}`,
         );
     }
 
@@ -239,7 +239,7 @@ export async function playQuery(client, interaction, query) {
         throw new TitanBotError(
             'No results',
             ErrorTypes.USER_INPUT,
-            'No results found for that query.',
+            'Я даже под трубой искал, но ничего не нашел.',
         );
     }
 
@@ -277,14 +277,14 @@ export async function playQuery(client, interaction, query) {
     ) {
         const track = tracks?.[0];
         if (!track) {
-            throw new TitanBotError('No results', ErrorTypes.USER_INPUT, 'No results found for that query.');
+            throw new TitanBotError('Ну я хз', ErrorTypes.USER_INPUT, 'Я даже под трубой искал, но ничего не нашел');
         }
 
         if (isDuplicateTrack(player, track)) {
             throw new TitanBotError(
                 'Duplicate track',
                 ErrorTypes.USER_INPUT,
-                `**${track.info.title}** is already in the queue or playing.`,
+                `**${track.info.title}** уже стоит в очереди или играет.`,
             );
         }
 
@@ -300,7 +300,7 @@ export async function playQuery(client, interaction, query) {
 
         return {
             embed: successEmbed(
-                willPlayNow ? 'Now Playing' : 'Track Added',
+                willPlayNow ? 'Сейчас долбит' : 'добавлен трек',
                 willPlayNow
                     ? `**${track.info.title}**\n${track.info.author}`
                     : `**${track.info.title}**\n${track.info.author}\nPosition: #${queuePosition} in queue`,
@@ -308,7 +308,7 @@ export async function playQuery(client, interaction, query) {
         };
     }
 
-    throw new TitanBotError('No results', ErrorTypes.USER_INPUT, `No results found. (loadType: ${loadType})`);
+    throw new TitanBotError('Ни-Ху-Я', ErrorTypes.USER_INPUT, `Я не нашел, напиши правишьно. Дэбил. (loadType: ${loadType})`);
 }
 
 export async function skipTrack(client, interaction) {
@@ -324,7 +324,7 @@ export async function skipTrack(client, interaction) {
         player.setLoop('none');
     }
     player.stop();
-    return successEmbed('Skipped', `Skipped **${title}**.`);
+    return successEmbed('Пропустить', `Скипнуть **${title}**.`);
 }
 
 export async function stopPlayback(client, interaction) {
