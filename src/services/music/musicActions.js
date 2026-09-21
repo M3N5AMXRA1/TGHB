@@ -14,7 +14,8 @@ import {
 } from './musicEmbeds.js';
 import { refreshPlayerMessage } from './playerHandler.js';
 
-const YOUTUBE_URL_PATTERN = /(?:youtube\.com|youtu\.be)/i;
+// ✅ ИЗМЕНЕНО: якорная регулярка вместо поиска подстроки где угодно
+const YOUTUBE_URL_PATTERN = /^(https?:\/\/)?(www\.|music\.)?(youtube\.com|youtu\.be)\/.+/i;
 const PLAYER_CONNECT_TIMEOUT_MS = 12_000;
 
 function getConnectedLavalinkNodes(client) {
@@ -196,22 +197,51 @@ export async function joinVoiceChannel(client, interaction) {
 }
 
 export async function playQuery(client, interaction, query) {
-    if (YOUTUBE_URL_PATTERN.test(query)) {
-        throw new TitanBotError(
-            'YouTube URL blocked',
-            ErrorTypes.USER_INPUT,
-            'YouTube links are not supported. Try a song name instead.',
-        );
-    }
+    // ✅ ИЗМЕНЕНО: блокировка YouTube убрана.
+    // Теперь ссылки YouTube работают через плагин youtube-source на Lavalink.
+    // Если понадобится временно отключить — раскомментируйте проверку ниже:
+    //
+    // if (YOUTUBE_URL_PATTERN.test(query)) {
+    //     throw new TitanBotError(
+    //         'YouTube URL blocked',
+    //         ErrorTypes.USER_INPUT,
+    //         'YouTube links are temporarily disabled.',
+    //     );
+    // }
 
     const { player, guildData } = await ensurePlayer(client, interaction);
 
+    // ✅ ИЗМЕНЕНО: если это не прямая ссылка — ищем именно через YouTube.
+    // Без префикса ytsearch: Lavalink может уйти в SoundCloud или другой источник.
+    const searchQuery = YOUTUBE_URL_PATTERN.test(query)
+        ? query
+        : `ytsearch:${query}`;
+
     const result = await client.riffy.resolve({
-        query,
+        query: searchQuery,
         requester: interaction.user,
     });
 
     const { loadType, tracks, playlistInfo } = result;
+
+    // ✅ ИЗМЕНЕНО: добавлена обработка ошибок Lavalink.
+    // Без этого при сбое загрузки бот падал с неинформативной ошибкой.
+    if (loadType === 'error' || loadType === 'LOAD_FAILED') {
+        const reason = result.exception?.message || result.data?.message || 'Unknown error';
+        throw new TitanBotError(
+            'Lavalink load failed',
+            ErrorTypes.USER_INPUT,
+            `Failed to load track: ${reason}`,
+        );
+    }
+
+    if (loadType === 'empty' || loadType === 'NO_MATCHES') {
+        throw new TitanBotError(
+            'No results',
+            ErrorTypes.USER_INPUT,
+            'No results found for that query.',
+        );
+    }
 
     if (loadType === 'playlist' || loadType === 'PLAYLIST_LOADED') {
         let added = 0;
