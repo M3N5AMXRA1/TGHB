@@ -40,12 +40,12 @@ function getTrackArtwork(track) {
 
 function getLoopLabel(loop) {
     switch (loop) {
-        case 'track':
-            return 'Track';
-        case 'queue':
-            return 'Queue';
+        case 'трэк':
+            return 'трэк';
+        case 'очередь':
+            return 'Очередь';
         default:
-            return 'Off';
+            return 'Выключен';
     }
 }
 
@@ -63,12 +63,12 @@ export function buildNowPlayingEmbed(track, player, guildData) {
         description: track?.info?.title || 'я хз че за трек',
         color: 'primary',
         fields: [
-            { name: 'Артист', value: track?.info?.author || 'Unknown', inline: true },
+            { name: 'Артист', value: track?.info?.author || 'Неизвестно', inline: true },
             { name: 'Включил', value: requesterLabel, inline: true },
             { name: 'Таймлайн', value: `${position} / ${duration}`, inline: true },
             { name: 'Громкость', value: `${guildData?.volume ?? 75}%`, inline: true },
             { name: 'Повтор', value: getLoopLabel(guildData?.loop), inline: true },
-            { name: 'Очередь', value: `${player?.queue?.length || 0} track(s)`, inline: true },
+            { name: 'Очередь', value: `${player?.queue?.length || 0} трек(ов)`, inline: true },
         ],
         thumbnail: getTrackArtwork(track),
         footer: player?.paused ? 'Пауза' : 'Продолжить',
@@ -84,7 +84,7 @@ export function buildQueueEmbed(queue, currentTrack, page = 0) {
 
     let description = '';
     if (currentTrack) {
-        description += `**Сейчас долбит**\n${currentTrack.info?.title || 'Unknown'} — ${currentTrack.info?.author || 'Unknown'}\n\n`;
+        description += `**Сейчас долбит**\n${currentTrack.info?.title || 'неизвестно'} — ${currentTrack.info?.author || 'Unknown'}\n\n`;
     }
 
     if (slice.length === 0) {
@@ -99,10 +99,10 @@ export function buildQueueEmbed(queue, currentTrack, page = 0) {
     }
 
     return createEmbed({
-        title: 'Music Queue',
+        title: 'Музыкальная очередь',
         description: description.substring(0, 4096),
-        color: 'info',
-        footer: `Page ${safePage + 1} of ${totalPages} • ${totalTracks} queued`,
+        color: 'Инфа',
+        footer: `Страница ${safePage + 1} of ${totalPages} • ${totalTracks} поставленны в очередь`,
     });
 }
 
@@ -111,29 +111,29 @@ export function buildPlayerButtonRows(player, guildData) {
     const row1 = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
             .setCustomId(MUSIC_BUTTON_IDS.PAUSE)
-            .setLabel('Pause')
+            .setLabel('Пауза')
             .setStyle(ButtonStyle.Primary)
             .setEmoji('⏸️')
             .setDisabled(Boolean(paused)),
         new ButtonBuilder()
             .setCustomId(MUSIC_BUTTON_IDS.RESUME)
-            .setLabel('Resume')
+            .setLabel('Продолжить')
             .setStyle(ButtonStyle.Success)
             .setEmoji('▶️')
             .setDisabled(!paused),
         new ButtonBuilder()
             .setCustomId(MUSIC_BUTTON_IDS.SKIP)
-            .setLabel('Skip')
+            .setLabel('Скип')
             .setStyle(ButtonStyle.Secondary)
             .setEmoji('⏭️'),
         new ButtonBuilder()
             .setCustomId(MUSIC_BUTTON_IDS.STOP)
-            .setLabel('Stop')
+            .setLabel('Стоп')
             .setStyle(ButtonStyle.Danger)
             .setEmoji('⏹️'),
         new ButtonBuilder()
             .setCustomId(MUSIC_BUTTON_IDS.SHUFFLE)
-            .setLabel('Shuffle')
+            .setLabel('Перемешать')
             .setStyle(guildData?.shuffle ? ButtonStyle.Success : ButtonStyle.Secondary)
             .setEmoji('🔀'),
     );
@@ -141,7 +141,7 @@ export function buildPlayerButtonRows(player, guildData) {
     const row2 = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
             .setCustomId(MUSIC_BUTTON_IDS.LOOP)
-            .setLabel('Loop')
+            .setLabel('Повтор')
             .setStyle(guildData?.loop !== 'none' ? ButtonStyle.Success : ButtonStyle.Secondary)
             .setEmoji('🔁'),
         new ButtonBuilder()
@@ -156,7 +156,7 @@ export function buildPlayerButtonRows(player, guildData) {
             .setEmoji('🔊'),
         new ButtonBuilder()
             .setCustomId(MUSIC_BUTTON_IDS.QUEUE)
-            .setLabel('Queue')
+            .setLabel('Очередь')
             .setStyle(ButtonStyle.Secondary)
             .setEmoji('📋'),
     );
