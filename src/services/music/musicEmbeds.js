@@ -52,26 +52,26 @@ function getLoopLabel(loop) {
 export function buildNowPlayingEmbed(track, player, guildData) {
     const requester = track?.info?.requester;
     const requesterLabel = requester
-        ? (requester.username || requester.tag || 'Unknown')
-        : 'Unknown';
+        ? (requester.username || requester.tag || 'я хз')
+        : 'я хз';
 
     const position = formatDuration(player?.position || 0);
     const duration = formatDuration(track?.info?.length || 0);
 
     return createEmbed({
-        title: 'Now Playing',
-        description: track?.info?.title || 'Unknown track',
+        title: 'Сейчас долбит',
+        description: track?.info?.title || 'я хз че за трек',
         color: 'primary',
         fields: [
-            { name: 'Artist', value: track?.info?.author || 'Unknown', inline: true },
-            { name: 'Requester', value: requesterLabel, inline: true },
-            { name: 'Progress', value: `${position} / ${duration}`, inline: true },
-            { name: 'Volume', value: `${guildData?.volume ?? 75}%`, inline: true },
-            { name: 'Loop', value: getLoopLabel(guildData?.loop), inline: true },
-            { name: 'Queue', value: `${player?.queue?.length || 0} track(s)`, inline: true },
+            { name: 'Артист', value: track?.info?.author || 'Unknown', inline: true },
+            { name: 'Включил', value: requesterLabel, inline: true },
+            { name: 'Таймлайн', value: `${position} / ${duration}`, inline: true },
+            { name: 'Громкость', value: `${guildData?.volume ?? 75}%`, inline: true },
+            { name: 'Повтор', value: getLoopLabel(guildData?.loop), inline: true },
+            { name: 'Очередь', value: `${player?.queue?.length || 0} track(s)`, inline: true },
         ],
         thumbnail: getTrackArtwork(track),
-        footer: player?.paused ? 'Paused' : 'Playing',
+        footer: player?.paused ? 'Пауза' : 'Продолжить',
     });
 }
 
@@ -84,11 +84,11 @@ export function buildQueueEmbed(queue, currentTrack, page = 0) {
 
     let description = '';
     if (currentTrack) {
-        description += `**Now Playing**\n${currentTrack.info?.title || 'Unknown'} — ${currentTrack.info?.author || 'Unknown'}\n\n`;
+        description += `**Сейчас долбит**\n${currentTrack.info?.title || 'Unknown'} — ${currentTrack.info?.author || 'Unknown'}\n\n`;
     }
 
     if (slice.length === 0) {
-        description += 'The queue is empty.';
+        description += 'Пустая очередь.';
     } else {
         description += slice
             .map((track, index) => {
@@ -165,7 +165,7 @@ export function buildPlayerButtonRows(player, guildData) {
 }
 
 export function buildQueuePaginationRow(page, totalPages) {
-    return getPaginationRow('music_queue', page + 1, totalPages);
+    return getPaginationRow('Музыкальная очередь', page + 1, totalPages);
 }
 
 export function getQueuePageSize() {
