@@ -14,8 +14,7 @@ import {
 } from './musicEmbeds.js';
 import { refreshPlayerMessage } from './playerHandler.js';
 
-// ✅ ИЗМЕНЕНО: якорная регулярка вместо поиска подстроки где угодно
-const YOUTUBE_URL_PATTERN = /^(https?:\/\/)?(www\.|music\.)?(youtube\.com|youtu\.be)\/.+/i;
+const YOUTUBE_URL_PATTERN = /(?:youtube\.com|youtu\.be)/i;
 const PLAYER_CONNECT_TIMEOUT_MS = 12_000;
 
 function getConnectedLavalinkNodes(client) {
@@ -31,7 +30,7 @@ export function assertLavalinkNodeAvailable(client) {
         throw new TitanBotError(
             'Lavalink unavailable',
             ErrorTypes.CONFIGURATION,
-            'Музыка временно недоступна — ни один из узлов Lavalink не подключен. Повторите попытку в ближайшее время или настройте свой собственный сервер Lavalink.',
+            'Music is temporarily unavailable — no Lavalink nodes are connected. Try again shortly or configure your own Lavalink server.',
         );
     }
 }
@@ -41,7 +40,7 @@ function assertBotVoicePermissions(channel) {
         throw new TitanBotError(
             'Voice channel unavailable',
             ErrorTypes.CONFIGURATION,
-            'Бляяяя. У меня не удалось получить доступ к этому голосовому каналу.',
+            'Could not access that voice channel.',
         );
     }
 
@@ -49,7 +48,7 @@ function assertBotVoicePermissions(channel) {
         throw new TitanBotError(
             'Missing voice permissions',
             ErrorTypes.PERMISSION,
-            'Ты сука дебил ебаный. Мне нужны разрешения **Подключаться** и **Говорить** в этом голосовом канале.',
+            'I need **Connect** and **Speak** permissions in your voice channel.',
         );
     }
 }
@@ -81,7 +80,7 @@ async function waitForPlayerConnection(player) {
         throw new TitanBotError(
             'Voice connection failed',
             ErrorTypes.CONFIGURATION,
-            'Не удалось подключиться к голосовому каналу. Убедитесь, что Lavalink подключен к сети, у бота есть разрешения подключаться и говорить, затем повторите попытку.',
+            'Could not connect to the voice channel. Ensure Lavalink is online, the bot has Connect and Speak permissions, then try again.',
         );
     }
 }
@@ -100,7 +99,7 @@ export function assertRiffyAvailable(client) {
         throw new TitanBotError(
             'Lavalink not configured',
             ErrorTypes.CONFIGURATION,
-            'Ну ты чучундра, реально. Музыка недоступна — Lavalink не настроен.',
+            'Music is unavailable — Lavalink is not configured.',
         );
     }
 }
@@ -110,7 +109,7 @@ export function assertInVoice(member) {
         throw new TitanBotError(
             'Not in voice channel',
             ErrorTypes.USER_INPUT,
-            'Але нахуй! Ты должен быть подключены к голосовому каналу.',
+            'You need to be in a voice channel.',
         );
     }
 }
@@ -197,51 +196,22 @@ export async function joinVoiceChannel(client, interaction) {
 }
 
 export async function playQuery(client, interaction, query) {
-    // ✅ ИЗМЕНЕНО: блокировка YouTube убрана.
-    // Теперь ссылки YouTube работают через плагин youtube-source на Lavalink.
-    // Если понадобится временно отключить — раскомментируйте проверку ниже:
-    //
-    // if (YOUTUBE_URL_PATTERN.test(query)) {
-    //     throw new TitanBotError(
-    //         'YouTube URL blocked',
-    //         ErrorTypes.USER_INPUT,
-    //         'YouTube links are temporarily disabled.',
-    //     );
-    // }
+    if (YOUTUBE_URL_PATTERN.test(query)) {
+        throw new TitanBotError(
+            'YouTube URL blocked',
+            ErrorTypes.USER_INPUT,
+            'YouTube links are not supported. Try a song name instead.',
+        );
+    }
 
     const { player, guildData } = await ensurePlayer(client, interaction);
 
-    // ✅ ИЗМЕНЕНО: если это не прямая ссылка — ищем именно через YouTube.
-    // Без префикса ytsearch: Lavalink может уйти в SoundCloud или другой источник.
-    const searchQuery = YOUTUBE_URL_PATTERN.test(query)
-        ? query
-        : `ytsearch:${query}`;
-
     const result = await client.riffy.resolve({
-        query: searchQuery,
+        query,
         requester: interaction.user,
     });
 
     const { loadType, tracks, playlistInfo } = result;
-
-    // ✅ ИЗМЕНЕНО: добавлена обработка ошибок Lavalink.
-    // Без этого при сбое загрузки бот падал с неинформативной ошибкой.
-    if (loadType === 'error' || loadType === 'LOAD_FAILED') {
-        const reason = result.exception?.message || result.data?.message || 'Unknown error';
-        throw new TitanBotError(
-            'Lavalink load failed',
-            ErrorTypes.USER_INPUT,
-            `Пиздец, не удалось загрузить трек: ${reason}`,
-        );
-    }
-
-    if (loadType === 'empty' || loadType === 'NO_MATCHES') {
-        throw new TitanBotError(
-            'No results',
-            ErrorTypes.USER_INPUT,
-            'Я даже под трубой искал, но ничего не нашел.',
-        );
-    }
 
     if (loadType === 'playlist' || loadType === 'PLAYLIST_LOADED') {
         let added = 0;
@@ -277,14 +247,14 @@ export async function playQuery(client, interaction, query) {
     ) {
         const track = tracks?.[0];
         if (!track) {
-            throw new TitanBotError('Ну я хз', ErrorTypes.USER_INPUT, 'Я даже под трубой искал, но ничего не нашел');
+            throw new TitanBotError('No results', ErrorTypes.USER_INPUT, 'No results found for that query.');
         }
 
         if (isDuplicateTrack(player, track)) {
             throw new TitanBotError(
                 'Duplicate track',
                 ErrorTypes.USER_INPUT,
-                `**${track.info.title}** уже стоит в очереди или играет.`,
+                `**${track.info.title}** is already in the queue or playing.`,
             );
         }
 
@@ -300,7 +270,7 @@ export async function playQuery(client, interaction, query) {
 
         return {
             embed: successEmbed(
-                willPlayNow ? 'Сейчас долбит' : 'добавлен трек',
+                willPlayNow ? 'Now Playing' : 'Track Added',
                 willPlayNow
                     ? `**${track.info.title}**\n${track.info.author}`
                     : `**${track.info.title}**\n${track.info.author}\nPosition: #${queuePosition} in queue`,
@@ -308,7 +278,7 @@ export async function playQuery(client, interaction, query) {
         };
     }
 
-    throw new TitanBotError('Ни-Ху-Я', ErrorTypes.USER_INPUT, `Я не нашел, напиши правишьно. Дэбил. (loadType: ${loadType})`);
+    throw new TitanBotError('No results', ErrorTypes.USER_INPUT, `No results found. (loadType: ${loadType})`);
 }
 
 export async function skipTrack(client, interaction) {
@@ -324,7 +294,7 @@ export async function skipTrack(client, interaction) {
         player.setLoop('none');
     }
     player.stop();
-    return successEmbed('Пропустить', `Скипнуть **${title}**.`);
+    return successEmbed('Skipped', `Skipped **${title}**.`);
 }
 
 export async function stopPlayback(client, interaction) {
